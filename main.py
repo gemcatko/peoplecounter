@@ -217,14 +217,13 @@ def show_fps(start_time, end_time, name_of_frame):
 class YObject:
     # use for creating objects from Yolo.
     # def __init__(self, centroid_id, category, score, bounds):
-    def __init__(self, id, category, score, bounds, s_distance):
+    def __init__(self, id, category, score, bounds):
         # copy paste functionality of  detect_object_4_c
         self.id = id
         self.category = category
         self.score = score
         self.bounds = bounds
         self.is_big = False
-        self.position_on_trail = s_distance
         self.is_detected_by_detector = True
         self.ignore = False
         self.is_picture_saved = False
@@ -339,7 +338,7 @@ def is_Yobject_to_big(bounds):
 def second_visualization(net_width, net_heigth):
     existing_shm = shared_memory.SharedMemory(name='psm_c013ddb9')
     image = np.ndarray((net_width, net_heigth, 3), dtype=np.uint8, buffer=existing_shm.buf)
-    ct = CentroidTracker(maxDisappeared=20)
+    ct = CentroidTracker(maxDisappeared=200)
     which_id_to_delete = 0  # is used for object deletion start
     start_time = time.time()  # for FPS counting
     while True:
@@ -363,18 +362,19 @@ def second_visualization(net_width, net_heigth):
                         objekty[id].category = category.decode("utf-8")
                         objekty[id].score = score
                         objekty[id].bounds = bounds
-                        objekty[id].position_on_trail = s_distance.value
+
                         objekty[id].is_detected_by_detector = True
                         if is_Yobject_to_big(bounds):           # if objects is across whole camera view it need to go to trail visulaization so it can be marked. If not done centroid tracker whould hold it on  visible screen and it would be marked as very smal object when leaving camera view
                             objekty[id].is_big = True
 
             except:
                 # create new object if not existing
-                objekty[id] = YObject(id, category.decode("utf-8"), score, bounds, s_distance.value)
+                objekty[id] = YObject(id, category.decode("utf-8"), score, bounds)
         if len(objekty) > max_Yobject:  # max number of object which to keep
             del objekty[which_id_to_delete]
             which_id_to_delete = which_id_to_delete + 1
 
+        print(count_visible_objekt("person",objekty))
         for id in objekty:
             objekty[id].draw_object_bb(frame, idresults)
             #objekty[id].draw_category(frame, idresults)
@@ -383,13 +383,14 @@ def second_visualization(net_width, net_heigth):
             #objekty[id].draw_object_position_on_trail(frame, idresults)
             # objekty[id].save_picure_of_every_detected_object("detected_objects")
         update_objekty_if_not_detected(objekty, idresults)
-
+        """
         try:
             check_on_vysialization(draw_trail_visualization(objekty, s_distance), objekty, s_distance)
         except Exception as ex:
             template = "An exception of type {0} occurred. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             print(message)
+        """
         end_time = time.time()
         show_fps(start_time, end_time, frame)
         start_time = time.time()
@@ -397,6 +398,14 @@ def second_visualization(net_width, net_heigth):
         k = cv2.waitKey(1)
         if k == 0xFF & ord("q"):
             break
+
+def count_visible_objekt(object_to_count, objekty):
+    count_of_objects = 0
+    for id in objekty:
+        if objekty[id].is_detected_by_detector == True:
+            count_of_objects += 1
+    return count_of_objects
+
 
 
 def update_objekty_if_not_detected(objekty, idresults):
@@ -409,7 +418,7 @@ def update_objekty_if_not_detected(objekty, idresults):
         # id in (item for sublist in idresults for item in sublist) is returning True or False good explanation is https://www.geeksforgeeks.org/python-check-if-element-exists-in-list-of-lists/
         if not id in (item for sublist in idresults for item in sublist):
             objekty[id].is_detected_by_detector = False
-            # objekty[id].position_on_trail = s_distance.value
+
 
 
 def calculate_relative_coordinates(x, y, w, h):
@@ -435,5 +444,5 @@ second_visualization_proc = Process(target=second_visualization, args=(network_w
 second_visualization_proc.daemon = True
 
 if __name__ == "__main__":
-    #second_visualization_proc.start()
+    second_visualization_proc.start()
     YOLO()
