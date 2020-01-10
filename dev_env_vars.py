@@ -12,7 +12,7 @@ Yresolution = 720   #used for setting input camera resolution
 
 scale_trail_visualization = 4 # how much compact trail visualization heigth
 # from where to take a video videofile
-video_filename = "VID-20190530-WA0001.mp4"
+video_filename = "VID-20190830-WA0028.mp4"
 #video_filename = "VID_20190711_065005.mp4"
 video_filename_path = "/home/automateit/Projects/peoplecounter/x64/Release/data/" + video_filename
 
