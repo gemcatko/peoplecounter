@@ -338,7 +338,7 @@ def is_Yobject_to_big(bounds):
 def second_visualization(net_width, net_heigth):
     existing_shm = shared_memory.SharedMemory(name='psm_c013ddb9')
     image = np.ndarray((net_width, net_heigth, 3), dtype=np.uint8, buffer=existing_shm.buf)
-    ct = CentroidTracker(maxDisappeared=200)
+    ct = CentroidTracker(maxDisappeared=2000)
     which_id_to_delete = 0  # is used for object deletion start
     start_time = time.time()  # for FPS counting
     while True:
@@ -373,8 +373,11 @@ def second_visualization(net_width, net_heigth):
         if len(objekty) > max_Yobject:  # max number of object which to keep
             del objekty[which_id_to_delete]
             which_id_to_delete = which_id_to_delete + 1
+        if count_visible_objekt("person",objekty) > 0:
+            cv2.putText(frame, str(count_visible_objekt("person",objekty)), (20, 20), cv2.FONT_HERSHEY_COMPLEX,font_size,azzure)
 
-        print(count_visible_objekt("person",objekty))
+
+            print(count_visible_objekt("person",objekty))
         for id in objekty:
             objekty[id].draw_object_bb(frame, idresults)
             #objekty[id].draw_category(frame, idresults)
