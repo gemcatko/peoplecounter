@@ -4,6 +4,7 @@ import time
 import sys
 # insert at 1, 0 is the script path (or '' in REPL)
 sys.path.insert(1, '/home/automateit/Projects/darknet-alexeyAB/darknet')
+sys.path.insert(1, '/home/ce/Projects/darknet_alex_darknet')
 import darknet
 from multiprocessing import Process, Value, Array, Manager
 from multiprocessing import shared_memory
@@ -41,7 +42,7 @@ def cvDrawBoxes(detections, img):
                     detection[0].decode() +
                     " [" + str(round(detection[1] * 100, 2)) + "]",
                     (pt1[0], pt1[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    [0, 255, 0], 2)
+                    green, 2)
     return img
 
 
@@ -238,7 +239,7 @@ class YObject:
         """
         if self.is_detected_by_detector or id in (item for sublist in idresults for item in sublist):
             x, y, w, h = self.bounds
-            cv2.rectangle(frame, (int(x - w / 2), int(y - h / 2)), (int(x + w / 2), int(y + h / 2)), blue, 4)
+            cv2.rectangle(frame, (int(x - w / 2), int(y - h / 2)), (int(x + w / 2), int(y + h / 2)), green, 1)
 
     def draw_category(self, frame, idresults):
         """
@@ -266,7 +267,7 @@ class YObject:
         """
         if self.is_detected_by_detector or id in (item for sublist in idresults for item in sublist):
             x, y, w, h = self.bounds
-            cv2.putText(frame, str(self.id), (int(x - 30), int(y)), cv2.FONT_HERSHEY_COMPLEX, font_size, (magenta))
+            cv2.putText(frame, "ID" +str(self.id), (int(x - 30), int(y)), cv2.FONT_HERSHEY_COMPLEX, font_size, azzure)
 
     def draw_object_position_on_trail(self, frame, idresults):
         """
@@ -374,9 +375,7 @@ def second_visualization(net_width, net_heigth):
             del objekty[which_id_to_delete]
             which_id_to_delete = which_id_to_delete + 1
         if count_visible_objekt("person",objekty) > 0:
-            cv2.putText(frame, str(count_visible_objekt("person",objekty)), (20, 20), cv2.FONT_HERSHEY_COMPLEX,font_size,azzure)
-
-
+            cv2.putText(frame, "Number of person on screen:" + str(count_visible_objekt("person",objekty)), (20, 20), cv2.FONT_HERSHEY_COMPLEX,font_size,azzure)
             print(count_visible_objekt("person",objekty))
         for id in objekty:
             objekty[id].draw_object_bb(frame, idresults)
@@ -395,7 +394,7 @@ def second_visualization(net_width, net_heigth):
             print(message)
         """
         end_time = time.time()
-        show_fps(start_time, end_time, frame)
+        #show_fps(start_time, end_time, frame)
         start_time = time.time()
         cv2.imshow('second_visualization', frame)
         k = cv2.waitKey(1)

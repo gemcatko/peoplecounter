@@ -69,7 +69,7 @@ Xres = network_width
 Yres = network_heigth
 
 obj_data = "cfg/obj.data"
-detection_treshold = 0.6     # percentage which detection to consider
+detection_treshold = 0.25     # percentage which detection to consider
 
 #Colors
 black=(0,0,0)
