@@ -16,7 +16,7 @@ manager_detections = manager.list()
 from pyimagesearch.centroidtracker import CentroidTracker
 import logging
 
-shm = shared_memory.SharedMemory(create=True, size=6520800, name='psm_c013ddb6')
+shm = shared_memory.SharedMemory(create=True, size=6520800, name='psm_c013ddb1')
 shm_image = np.ndarray((network_width, network_heigth, 3), dtype=np.uint8, buffer=shm.buf)
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] (%(threadName)-10s) %(message)s', )
 
@@ -133,6 +133,12 @@ def YOLO():
         del manager_detections[:]  # need to be cleared every iterration
         detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=detection_treshold)
         # print(detections)
+        person_no=0
+
+        for cat, score, bounds in detections:
+            print(cat)
+            if "person" == bytes.decode(cat):
+                person_no += 1
         manager_detections.append(detections)
         image = cvDrawBoxes(detections, frame_resized)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -140,9 +146,13 @@ def YOLO():
 
         end_time = time.time()
         show_fps(start_time, end_time, image)
+        cv2.putText(image, "Number of person on camera: " + str(person_no), (20, 20), cv2.FONT_HERSHEY_COMPLEX,
+                    font_size, azzure)
         start_time = time.time()
         cv2.imshow('Yolo_out', image)
-        cv2.waitKey(3)
+        k = cv2.waitKey(1)
+        if k == 0xFF & ord("q"):
+            break
     cap.release()
     out.release()
 
@@ -338,7 +348,7 @@ def is_Yobject_to_big(bounds):
 
 
 def second_visualization(net_width, net_heigth):
-    existing_shm = shared_memory.SharedMemory(name='psm_c013ddb6')
+    existing_shm = shared_memory.SharedMemory(name='psm_c013ddb7')
     image = np.ndarray((net_width, net_heigth, 3), dtype=np.uint8, buffer=existing_shm.buf)
     ct = CentroidTracker(maxDisappeared=2000)
     which_id_to_delete = 0  # is used for object deletion start
@@ -353,7 +363,6 @@ def second_visualization(net_width, net_heigth):
         ct_objects = ct.update(convert_bounding_boxes_form_Yolo_Centroid_format(results))
         idresults = update_resutls_for_id(results, ct_objects)
         # print("Resultswith ID", idresults)
-        cv2.waitKey(3)
         for id, category, score, bounds in idresults:
             try:  #
                 # if Yobjekt with specific id already exists, update it
@@ -375,9 +384,9 @@ def second_visualization(net_width, net_heigth):
         if len(objekty) > max_Yobject:  # max number of object which to keep
             del objekty[which_id_to_delete]
             which_id_to_delete = which_id_to_delete + 1
-        if count_visible_objekt("person",objekty) > 0:
-            cv2.putText(frame, "Number of person on screen:" + str(count_visible_objekt("person",objekty)), (20, 20), cv2.FONT_HERSHEY_COMPLEX,font_size,azzure)
-            print(count_visible_objekt("person",objekty))
+        count_visible_objekt("person",objekty)
+        cv2.putText(frame, "Number of person on screen:" + str(count_visible_objekt("person",objekty)), (20, 20), cv2.FONT_HERSHEY_COMPLEX,font_size,azzure)
+        print(count_visible_objekt("person",objekty))
         for id in objekty:
             objekty[id].draw_object_bb(frame, idresults)
             #objekty[id].draw_category(frame, idresults)
@@ -406,7 +415,7 @@ def count_visible_objekt(object_to_count, objekty):
     count_of_objects = 0
     for id in objekty:
         if objekty[id].is_detected_by_detector == True:
-            count_of_objects += 1
+          count_of_objects += 1
     return count_of_objects
 
 
@@ -441,11 +450,9 @@ def calculate_relative_coordinates(x, y, w, h):
     return x_rel, y_rel, w_rel, h_rel, area_rel
 
 
-
-
-second_visualization_proc = Process(target=second_visualization, args=(network_width, network_heigth))
-second_visualization_proc.daemon = True
+#second_visualization_proc = Process(target=second_visualization, args=(network_width, network_heigth))
+#second_visualization_proc.daemon = True
 
 if __name__ == "__main__":
-    second_visualization_proc.start()
+    #second_visualization_proc.start()
     YOLO()
