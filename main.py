@@ -3,8 +3,9 @@ import cv2
 import time
 import sys
 # insert at 1, 0 is the script path (or '' in REPL)
-sys.path.insert(1, '/home/automateit/Projects/darknet-alexeyAB/darknet')
-sys.path.insert(1, '/home/ce/Projects/darknet_alex_darknet')
+#sys.path.insert(1, '/home/automateit/Projects/darknet-alexeyAB/darknet')
+#sys.path.insert(1, '/home/ce/Projects/darknet_alex_darknet')
+sys.path.insert(1, '/home/solcanma/darknet')
 import darknet
 from multiprocessing import Process, Value, Array, Manager
 from multiprocessing import shared_memory
@@ -15,7 +16,7 @@ manager_detections = manager.list()
 from pyimagesearch.centroidtracker import CentroidTracker
 import logging
 
-shm = shared_memory.SharedMemory(create=True, size=6520800, name='psm_c013ddb9')
+shm = shared_memory.SharedMemory(create=True, size=6520800, name='psm_c013ddb6')
 shm_image = np.ndarray((network_width, network_heigth, 3), dtype=np.uint8, buffer=shm.buf)
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] (%(threadName)-10s) %(message)s', )
 
@@ -91,7 +92,7 @@ def YOLO():
             pass
     # cap = cv2.VideoCapture(0)
     # USE if  webcam
-    """
+
     cap = cv2.VideoCapture(0)  # set web cam properties width and height, working for USB for webcam
     cap.set(3, Xresolution)
     cap.set(4, Yresolution)
@@ -104,11 +105,11 @@ def YOLO():
     print(cap.get(cv2.CAP_PROP_FPS))
     print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    """
 
-    cap = cv2.VideoCapture(video_filename_path)
-    #cap.set(3, Xresolution)
-    #cap.set(4, Yresolution)
+
+    #cap = cv2.VideoCapture(video_filename_path)
+    cap.set(3, Xresolution)
+    cap.set(4, Yresolution)
 
     out = cv2.VideoWriter(
         "output.avi", cv2.VideoWriter_fourcc(*"MJPG"), 10.0,
@@ -337,7 +338,7 @@ def is_Yobject_to_big(bounds):
 
 
 def second_visualization(net_width, net_heigth):
-    existing_shm = shared_memory.SharedMemory(name='psm_c013ddb9')
+    existing_shm = shared_memory.SharedMemory(name='psm_c013ddb6')
     image = np.ndarray((net_width, net_heigth, 3), dtype=np.uint8, buffer=existing_shm.buf)
     ct = CentroidTracker(maxDisappeared=2000)
     which_id_to_delete = 0  # is used for object deletion start

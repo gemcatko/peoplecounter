@@ -14,7 +14,7 @@ scale_trail_visualization = 4 # how much compact trail visualization heigth
 # from where to take a video videofile
 video_filename = "VID-20190830-WA0028.mp4"
 #video_filename = "VID_20190711_065005.mp4"
-video_filename_path = "/home/automateit/Projects/peoplecounter/x64/Release/data/" + video_filename
+video_filename_path = "./x64/Release/data/" + video_filename
 
 cell_phone = []
 list_chyba = []
@@ -22,7 +22,7 @@ list_chyba = []
 trigerlist = []
 idresults = []
 # Used by pLoopTrigerlist  to confirm object was marked  format is [(2.1, 1551338571.7396123), (2.2, 1551338571.9881353), (3.1, 1551338578.9405866), (3.2, 1551338579.1024451), (0.1, 1551338586.2836142), (0.2, 1551338586.4773874)]
-#fastTrigerList shall be deleted in future releases
+#fastTrigerList shall be deleted in future releasesdsa
 alreadyBlinkedTriger =[]
 alreadyBlinkedList = []
 #field_of_view = 0.3  # field of view in m for camera
