@@ -15,6 +15,7 @@ manager = Manager()
 manager_detections = manager.list()
 from pyimagesearch.centroidtracker import CentroidTracker
 import logging
+from distance import *
 
 shm = shared_memory.SharedMemory(create=True, size=6520800, name='psm_c013ddb1')
 shm_image = np.ndarray((network_width, network_heigth, 3), dtype=np.uint8, buffer=shm.buf)
@@ -119,6 +120,8 @@ def YOLO():
     # Create an image we reuse for each detect
     darknet_image = darknet.make_image(darknet.network_width(netMain),
                                        darknet.network_height(netMain), 3)
+    dist_t_camera_p = 0
+    dist_t_camera_c = 0
     while True:
         prev_time = time.time()
         ret, frame_read = cap.read()
@@ -136,16 +139,30 @@ def YOLO():
         person_no=0
 
         for cat, score, bounds in detections:
-            print(cat)
+            #print(cat)
             if "person" == bytes.decode(cat):
                 person_no += 1
+                dist_t_camera_p = distance_to_camera(KNOWN_WIDTH, know_distance(Xresolution/2), bounds[2])
+            if "cell phone" == bytes.decode(cat):
+                dist_t_camera_c = distance_to_camera(KNOWN_WIDTH, know_distance(Xresolution/8), bounds[2])
+
+
+
+
+
         manager_detections.append(detections)
         image = cvDrawBoxes(detections, frame_resized)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        dist_t_camera_p
+        cv2.putText(image, "DIstance PERSON: " + str(int(dist_t_camera_p)), (20, 60), cv2.FONT_HERSHEY_COMPLEX, font_size, azzure)
+
+        cv2.putText(image, "DIstance Cell: " + str(int(dist_t_camera_c)), (20, 80), cv2.FONT_HERSHEY_COMPLEX, font_size,
+                    azzure)
         shm_image[:] = image[:]  # copy image to shared memory as array because we would like to share with other proces
 
         end_time = time.time()
         show_fps(start_time, end_time, image)
+
         cv2.putText(image, "Number of person on camera: " + str(person_no), (20, 20), cv2.FONT_HERSHEY_COMPLEX,
                     font_size, azzure)
         start_time = time.time()
@@ -239,6 +256,7 @@ class YObject:
         self.is_detected_by_detector = True
         self.ignore = False
         self.is_picture_saved = False
+        self.distance = None
         # self.ready_for_blink_start = False
         # self.ready_for_blink_end = False
         global frame
