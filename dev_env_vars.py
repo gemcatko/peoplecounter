@@ -97,5 +97,7 @@ error_next_possible_blink_min = 50   # value in angles from magneto
 second_next_possible_blink_min = 100 # value in angles from magneto
 
 
+min_distance = 70
+
 
 

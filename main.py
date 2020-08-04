@@ -18,7 +18,8 @@ import logging
 from distance import *
 
 shm = shared_memory.SharedMemory(create=True, size=6520800, name='psm_c013ddb1')
-shm_image = np.ndarray((network_width, network_heigth, 3), dtype=np.uint8, buffer=shm.buf)
+#shm_image = np.ndarray((network_width, network_heigth, 3), dtype=np.uint8, buffer=shm.buf)
+shm_image = np.ndarray((Yresolution, Xresolution, 3), dtype=np.uint8, buffer=shm.buf)
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] (%(threadName)-10s) %(message)s', )
 
 
@@ -35,6 +36,12 @@ def cvDrawBoxes(detections, img):
                      detection[2][1], \
                      detection[2][2], \
                      detection[2][3]
+        darknetvscameraresolutionx = (Xresolution/network_width)
+        darknetvscameraresolutiony = (Yresolution / network_heigth)
+        x = x * darknetvscameraresolutionx
+        y = y * darknetvscameraresolutiony
+        w = w * darknetvscameraresolutionx
+        h = h * darknetvscameraresolutiony
         xmin, ymin, xmax, ymax = convertBack(
             float(x), float(y), float(w), float(h))
         pt1 = (xmin, ymin)
@@ -99,19 +106,16 @@ def YOLO():
     cap.set(4, Yresolution)
     ##Use webcam with high frame rate
     codec = cv2.VideoWriter_fourcc("M", "J", "P", "G")
-    cap.set(cv2.CAP_PROP_FPS, 50)  # FPS60FPS
+    cap.set(cv2.CAP_PROP_FPS, 60)  # FPS60FPS
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, Xresolution)  # set resolutionx of webcam
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, Yresolution)  # set resolutiony of webcam
     cap.set(cv2.CAP_PROP_FOURCC, codec)
     print(cap.get(cv2.CAP_PROP_FPS))
     print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-
     #cap = cv2.VideoCapture(video_filename_path)
     cap.set(3, Xresolution)
     cap.set(4, Yresolution)
-
     out = cv2.VideoWriter(
         "output.avi", cv2.VideoWriter_fourcc(*"MJPG"), 10.0,
         (darknet.network_width(netMain), darknet.network_height(netMain)))
@@ -120,8 +124,7 @@ def YOLO():
     # Create an image we reuse for each detect
     darknet_image = darknet.make_image(darknet.network_width(netMain),
                                        darknet.network_height(netMain), 3)
-    dist_t_camera_p = 0
-    dist_t_camera_c = 0
+
     while True:
         prev_time = time.time()
         ret, frame_read = cap.read()
@@ -135,44 +138,21 @@ def YOLO():
         darknet.copy_image_from_bytes(darknet_image, frame_resized.tobytes())
         del manager_detections[:]  # need to be cleared every iterration
         detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=detection_treshold)
-        # print(detections)
-        person_no=0
-
-        for cat, score, bounds in detections:
-            #print(cat)
-            if "person" == bytes.decode(cat):
-                person_no += 1
-                dist_t_camera_p = distance_to_camera(KNOWN_WIDTH, know_distance(Xresolution/2), bounds[2])
-            if "cell phone" == bytes.decode(cat):
-                dist_t_camera_c = distance_to_camera(KNOWN_WIDTH, know_distance(Xresolution/8), bounds[2])
-
-
-
-
-
         manager_detections.append(detections)
-        image = cvDrawBoxes(detections, frame_resized)
+        image = cvDrawBoxes(detections, frame_rgb)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        dist_t_camera_p
-        cv2.putText(image, "DIstance PERSON: " + str(int(dist_t_camera_p)), (20, 60), cv2.FONT_HERSHEY_COMPLEX, font_size, azzure)
-
-        cv2.putText(image, "DIstance Cell: " + str(int(dist_t_camera_c)), (20, 80), cv2.FONT_HERSHEY_COMPLEX, font_size,
-                    azzure)
+        draw_distance(detections, image)
         shm_image[:] = image[:]  # copy image to shared memory as array because we would like to share with other proces
-
         end_time = time.time()
         show_fps(start_time, end_time, image)
-
-        cv2.putText(image, "Number of person on camera: " + str(person_no), (20, 20), cv2.FONT_HERSHEY_COMPLEX,
-                    font_size, azzure)
         start_time = time.time()
         cv2.imshow('Yolo_out', image)
+        #print(image.shape)
         k = cv2.waitKey(1)
         if k == 0xFF & ord("q"):
             break
     cap.release()
     out.release()
-
 
 def convert_bounding_boxes_form_Yolo_Centroid_format(results):
     # clean rect so it is clean an can be filled with new detection from frame\
