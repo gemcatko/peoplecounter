@@ -2,6 +2,7 @@ import os
 import cv2
 import time
 import sys
+from datetime import datetime
 # insert at 1, 0 is the script path (or '' in REPL)
 #sys.path.insert(1, '/home/automateit/Projects/darknet-alexeyAB/darknet')
 #sys.path.insert(1, '/home/ce/Projects/darknet_alex_darknet')
@@ -13,14 +14,23 @@ import numpy as np
 from dev_env_vars import *
 manager = Manager()
 manager_detections = manager.list()
-from pyimagesearch.centroidtracker import CentroidTracker
+from pyimagesearch.centroidtracker import *
 import logging
 from distance import *
+#from pyimagesearch.centroidtracker import *
+
+
 
 shm = shared_memory.SharedMemory(create=True, size=6520800, name='psm_c013ddb1')
 #shm_image = np.ndarray((network_width, network_heigth, 3), dtype=np.uint8, buffer=shm.buf)
 shm_image = np.ndarray((Yresolution, Xresolution, 3), dtype=np.uint8, buffer=shm.buf)
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] (%(threadName)-10s) %(message)s', )
+
+# import the necessary packages
+from collections import OrderedDict
+
+import numpy as np
+from scipy.spatial import distance as dist
 
 
 def convertBack(x, y, w, h):
@@ -138,10 +148,20 @@ def YOLO():
         darknet.copy_image_from_bytes(darknet_image, frame_resized.tobytes())
         del manager_detections[:]  # need to be cleared every iterration
         detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=detection_treshold)
+        #detections = update_resutls_for_id(detections)
         manager_detections.append(detections)
         image = cvDrawBoxes(detections, frame_rgb)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        draw_distance(detections, image)
+
+
+        distance_results=update_resutls_for_distance(detections)
+        draw_distance_next_to_bb_box(image,distance_results)
+
+        #draw_distance(detections, image)
+
+
+
+
         shm_image[:] = image[:]  # copy image to shared memory as array because we would like to share with other proces
         end_time = time.time()
         show_fps(start_time, end_time, image)
@@ -162,22 +182,33 @@ def convert_bounding_boxes_form_Yolo_Centroid_format(results):
 
     # if len(results) <= 1: # check if array is not empty, for prevention of crashing in later stage
     #    return []
+    print("resultsinside convert bound..",results)
     try:
         for cat, score, bounds in results:  # unpacking
+            print("cat, score, bounds ", cat, score, bounds )
             x, y, w, h = bounds
+            print( "x, y, w, h", x, y, w, h)
             """
             convert from yolo format to cetroid format
             Yolo output:
+            [(b'person', 0.859128475189209, (243.3025360107422, 308.5773010253906, 183.75604248046875, 205.69090270996094))]
             [(b'person', 0.9299755096435547, (363.68475341796875, 348.0577087402344, 252.04286193847656, 231.17266845703125)), (b'vase', 0.3197628855705261, (120.3013687133789, 405.3641357421875, 40.76551055908203, 32.07142639160156))]
             [(b'mark', 0.9893345236778259, (86.11815643310547, 231.90643310546875, 22.100597381591797, 54.182857513427734)), (b'mark', 0.8441593050956726, (225.28382873535156, 234.5716094970703, 14.333066940307617, 53.428749084472656)), (b'edge', 0.6000953316688538, (377.6446838378906, 254.71759033203125, 8.562969207763672, 18.379894256591797)), (b'edge', 0.5561915636062622, (388.4414367675781, 211.0662841796875, 10.678437232971191, 15.206807136535645)), (b'edge', 0.44139474630355835, (377.0844421386719, 150.8873748779297, 9.128596305847168, 18.9124755859375)), (b'crack', 0.28897273540496826, (268.6462707519531, 169.00457763671875, 253.9573516845703, 34.764007568359375))]]
+            centroid input: 
+            [array([145, 153, 248, 274]), array([113, 178, 148, 224])]
+            
+            ([145, 153, 248, 274]), ([113, 178, 148, 224])
             """
             # calculate bounding box for every object from YOLO for centroid purposes
             box = np.array([x - w / 2, y - h / 2, x + w / 2, y + h / 2])
+            #box = ([x - w / 2, y - h / 2, x + w / 2, y + h / 2])
             # append to list of  bounding boxes for centroid
-            rects.append(box.astype("int"))
+            #rects.append(box.astype("int"))
+            rects.append(box)
         return rects
-    except:
-        # print("There was a problem with extrection from result:", rects)
+    except Exception as e:
+        print(e)
+        print("There was a problem with extrection from result:", rects)
         return rects
 
 
