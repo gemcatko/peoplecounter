@@ -17,6 +17,8 @@ manager_detections = manager.list()
 from pyimagesearch.centroidtracker import *
 import logging
 from distance import *
+from navigate import *
+
 #from pyimagesearch.centroidtracker import *
 
 
@@ -156,8 +158,8 @@ def YOLO():
 
         distance_results=update_resutls_for_distance(detections)
         draw_distance_next_to_bb_box(image,distance_results)
+        navigate(distance_results)
 
-        #draw_distance(detections, image)
 
 
 
