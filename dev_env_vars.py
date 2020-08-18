@@ -59,8 +59,8 @@ object_to_detect = "error"
 cat_encoding = "utf-8"
 
 
-configPath = "./x64/Release/data/yolov3-spp.cfg"    #used only by autowood
-weightPath = "./backup/yolov3-spp.weights"    #used only by autowood
+configPath = "./x64/Release/data/yolov3-spp.cfg"                #used only by autowood
+weightPath = "./backup/yolov3-spp.weights"                      #used only by autowood
 metaPath = "./x64/Release/data/obj.data"                        #used only by autowood
 network_width = 416     # this need to be changed in cfg file as well
 network_heigth = 416    # this need to be changed in cfg file as well

@@ -130,7 +130,7 @@ def YOLO():
     darknet_image = darknet.make_image(darknet.network_width(netMain),
                                        darknet.network_height(netMain), 3)
     # definition how much frames when object is marked as dissapear
-    ct = CentroidTracker(maxDisappeared=20)
+    ct = CentroidTracker(maxDisappeared=60)
 
     while True:
         prev_time = time.time()
@@ -367,6 +367,7 @@ def is_Yobject_to_big(bounds):
 def second_visualization(Xresolution, Yresolution):
     #existing_shm = shared_memory.SharedMemory(name='psm_c013ddb7', create=True,size=net_width*net_heigth*3)
     #image = np.ndarray((net_width, net_heigth, 3), dtype=np.uint8, buffer=existing_shm.buf)
+    number_of_deleted_objects = 0
 
     start_time = time.time()  # for FPS counting
     while True:
@@ -378,33 +379,41 @@ def second_visualization(Xresolution, Yresolution):
             #print("results from second loop", results)
 
             for dist, id, category, score, bounds in results:
+                #print(dist, id, category, score, bounds)
                 try:
                     # if Yobjekt with specific id already exists, update it
                     # TODO # to je mozno chyba,co sa stane z objektami ktorych id je este na zobrazene ale nuz je objekt dissapeared
+                    objekty[id].is_detected_by_detector = False
                     if objekty[id].id == id: #and objekty[id].category == category.decode("utf-8"):
                         if objekty[id].category == category.decode("utf-8"):
                             objekty[id].category = category.decode("utf-8")
                             objekty[id].score = score
-                            objekty[id].bounds = bounds
+                            # change scale of xywh because until now there where in reolution of darknet
+                            x,y,w,h = bounds
+                            darknetvscameraresolutionx = (Xresolution / network_width)
+                            darknetvscameraresolutiony = (Yresolution / network_heigth)
+                            x = x * darknetvscameraresolutionx
+                            y = y * darknetvscameraresolutiony
+                            w = w * darknetvscameraresolutionx
+                            h = h * darknetvscameraresolutiony
+                            nbounds = x,y,w,h
+                            objekty[id].bounds =nbounds
+                            objekty[id].distance = dist
                             objekty[id].is_detected_by_detector = True
                 except Exception as e:
                     print(e)
                     # create new object if not existing
                     objekty[id] = YObject(dist ,id, category.decode("utf-8"), score, bounds)
-            update_objekty_if_not_detected(objekty)
-            #print(len(objekty))
-            #print(objekty)
             if len(objekty) > 25: # max number of object which draw on trail
                 del objekty[number_of_deleted_objects]
                 number_of_deleted_objects = number_of_deleted_objects + 1
 
             #do stuff here
             map_visualization(objekty)
+
+            #@TODO make a folow person
+            #calltrell
             cv2.imshow('second_visualization', frame)
-
-
-
-
         k = cv2.waitKey(1)
         if k == 0xFF & ord("q"):
             break
@@ -451,17 +460,6 @@ def draw_id(img,dist_id_detectios):
                     azzure)
     return img
 
-def update_objekty_if_not_detected(objekty):
-    """
-    :param objekty:
-    Is updating all objects store in objekty if not in in idresults list from detector
-    :return:
-    """
-    for id in objekty:
-        # id in (item for sublist in idresults for item in sublist) is returning True or False good explanation is https://www.geeksforgeeks.org/python-check-if-element-exists-in-list-of-lists/
-        if not id in (item for sublist in idresults for item in sublist):
-            objekty[id].is_detected_by_detector = False
-            #objekty[id].position_on_trail = s_distance.value
 
 
 second_visualization_proc = multiprocessing.Process(target=second_visualization, args=(Xresolution,Yresolution,))

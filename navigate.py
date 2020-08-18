@@ -10,13 +10,13 @@ def navigate(distance_results):
                     cur_time = str(datetime.now().time()) + " GO"
                     detection = [distance,cat, score, bounds]
                     rotate_to_target(detection)
-                    logging.info(cur_time)
+                    #logging.info(cur_time)
 
             if "cell phone" == bytes.decode(cat):
 
                 if not to_close(distance):
                     cur_time = str(datetime.now().time()) + " GO"
-                    logging.info(cur_time)
+                    #logging.info(cur_time)
 
         except Exception as e:
             print(e)
@@ -24,7 +24,7 @@ def navigate(distance_results):
 def to_close(distance):
     if distance < min_distance:
         cur_time = str(datetime.now().time()) + " BACKWARD"
-        logging.info(cur_time)
+        #logging.info(cur_time)
         return True
 
 def rotate_to_target (detection):
@@ -43,8 +43,11 @@ def rotate_to_target (detection):
     h = h * darknetvscameraresolutiony
     try:
         if x < middleX:
-             logging.info("Rotate to left")
+             #logging.info("Rotate to left")
+            pass
         if x > middleX:
-            logging.info("Rotate to right")
+           # logging.info("Rotate to right")
+            pass
     except Exception as e:
         print(e)
+
