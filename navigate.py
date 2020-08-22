@@ -2,29 +2,44 @@ import logging
 from dev_env_vars import *
 from datetime import datetime
 
-def navigate(distance_results):
-    for distance,id,cat, score, bounds in distance_results:
+def navigate_o(objects):
+    """
+
+    :param objects:
+        self.id = id
+        self.category = category
+        self.score = score
+        self.bounds = bounds
+        self.is_big = False
+        self.is_detected_by_detector = True
+        self.ignore = False
+        self.is_picture_saved = False
+        self.distance = distance
+    :return:
+    """
+    for id in objects:
         try:
-            if "person" == bytes.decode(cat):
-                if not to_close(distance):
+            if "person" == objects[id].category:
+                if not to_close(objects[id].distance):
                     cur_time = str(datetime.now().time()) + " GO"
-                    detection = [distance,cat, score, bounds]
+                    detection = [objects[id].distance,objects[id].category,objects[id].score,objects[id].bounds]
                     rotate_to_target(detection)
-                    #logging.info(cur_time)
+                    logging.info(cur_time)
 
-            if "cell phone" == bytes.decode(cat):
+            if "cell phone" == objects[id].category:
 
-                if not to_close(distance):
+                if not to_close(objects[id].distance):
                     cur_time = str(datetime.now().time()) + " GO"
-                    #logging.info(cur_time)
+                    logging.info(cur_time)
 
         except Exception as e:
             print(e)
 
+
 def to_close(distance):
     if distance < min_distance:
         cur_time = str(datetime.now().time()) + " BACKWARD"
-        #logging.info(cur_time)
+        logging.info(cur_time)
         return True
 
 def rotate_to_target (detection):

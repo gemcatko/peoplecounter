@@ -153,7 +153,8 @@ def YOLO():
         dist_id_detections=update_resutls_for_distance(id_detections)
         draw_distance_next_to_bb_box(image,dist_id_detections)
         draw_id(image,dist_id_detections,)
-        navigate(dist_id_detections)
+        #navigate(dist_id_detections)
+
         manager_detections.append(dist_id_detections)
 
         shm_image[:] = image[:]  # copy image to shared memory as array because we would like to share with other proces
@@ -256,8 +257,7 @@ class YObject:
         self.ignore = False
         self.is_picture_saved = False
         self.distance = distance
-        # self.ready_for_blink_start = False
-        # self.ready_for_blink_end = False
+
         global frame
 
     def draw_object_bb(self, frame, idresults):
@@ -410,6 +410,7 @@ def second_visualization(Xresolution, Yresolution):
 
             #do stuff here
             map_visualization(objekty)
+            navigate_o(objekty)
 
             #@TODO make a folow person
             #calltrell
